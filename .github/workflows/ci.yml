@@ -4,9 +4,8 @@ on:
   push:
   pull_request:
 
-
 jobs:
-  unit-tests:
+  sensors:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,21 +16,42 @@ jobs:
         working-directory: sensors
       - run: npm test
         working-directory: sensors
+  fog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: npm install
         working-directory: fog
       - run: npm test
         working-directory: fog
+  processor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: npm install
         working-directory: backend/processor
       - run: npm test
         working-directory: backend/processor
+  dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: npm install
         working-directory: backend/dashboard
       - run: npm test
         working-directory: backend/dashboard
-
   integration:
     runs-on: ubuntu-latest
+    needs: [sensors, fog, processor, dashboard]
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4

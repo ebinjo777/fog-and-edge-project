@@ -15,7 +15,7 @@ PREREQUISITES
 INSTALLATION STEPS
 --------------------
 1. Clone the repository and change into the project folder:
-     cd fog-and-edge-project
+     .
    All further commands below assume this working directory unless a
    different one is stated.
 
@@ -142,13 +142,12 @@ To stop the stack:
 
 AWS DEPLOYMENT STEPS
 -----------------------
-This project is deployed using the Terraform module in
-terraform/ at the repository root. No terraform/deployments/ska.tfvars
-file exists yet -- create one first, with these fields: prefix,
-project_root, table_name, queue_name,
-processor_lambda_name/build_command/zip_path/handler/runtime,
-dashboard_lambda_name/build_command/zip_path/handler/runtime,
-frontend_local_dir, api_base_placeholder, api_base_search_files.
+This project is deployed using the Terraform module in terraform/,
+driven by the settings file terraform/deployments/ska.tfvars. The
+frontend's <script id="api-config"> element in
+backend/dashboard/static/index.html carries the __API_BASE__ token that
+the deploy step substitutes with the real API Gateway URL; locally the
+unsubstituted token resolves to same-origin.
 
 1. Configure AWS CLI credentials for the target AWS account (access key,
    secret key, session token for an AWS Academy Learner Lab session):
@@ -156,50 +155,22 @@ frontend_local_dir, api_base_placeholder, api_base_search_files.
    Confirm you are pointed at the correct account before proceeding:
      aws sts get-caller-identity
 
-2. Create terraform/deployments/ska.tfvars, for example:
-     prefix       = "ska"
-     project_root = "../projects/25-ski-resort-avalanche-safety"
-
-     table_name = "ska-readings"
-     queue_name = "ska-slope-agg"
-
-     processor_lambda_name   = "ska-processor"
-     processor_build_command = "cd backend/processor && npm ci --omit=dev --silent && rm -f lambda.zip && zip -qr lambda.zip handler.js transform.js package.json node_modules"
-     processor_zip_path      = "backend/processor/lambda.zip"
-     processor_handler       = "handler.handler"
-     processor_runtime       = "nodejs20.x"
-
-     dashboard_lambda_name   = "ska-dashboard-api"
-     dashboard_build_command = "cd backend/dashboard && npm ci --omit=dev --silent && rm -f lambda.zip && zip -qr lambda.zip lambdaHandler.js server.js awsClients.js readingsStore.js pipelineStatus.js thresholdsProxy.js package.json node_modules"
-     dashboard_zip_path      = "backend/dashboard/lambda.zip"
-     dashboard_handler       = "lambdaHandler.handler"
-     dashboard_runtime       = "nodejs20.x"
-
-     frontend_local_dir    = "backend/dashboard/static"
-     api_base_placeholder  = "__API_BASE__"
-     api_base_search_files = ["index.html"]
-
-   Before building, replace the empty string in the apiBase field of the
-   <script id="api-config"> element in backend/dashboard/static/index.html
-   with the literal token you set as api_base_placeholder above, so the
-   deploy step can substitute the real API Gateway URL into it.
-
-3. Create and switch to an isolated Terraform workspace before applying:
+2. Create and switch to an isolated Terraform workspace before applying:
      cd terraform
      terraform workspace new ska
      terraform workspace list
 
-4. Build the Lambda deployment packages and the EC2 source tarball:
+3. Build the Lambda deployment packages and the EC2 source tarball:
      ./build.sh deployments/ska.tfvars
 
-5. Review the plan before applying, and confirm it shows only resources
+4. Review the plan before applying, and confirm it shows only resources
    to add, not to destroy:
      terraform plan -var-file=deployments/ska.tfvars
 
-6. Apply:
+5. Apply:
      terraform apply -var-file=deployments/ska.tfvars
 
-7. Switch back to the default workspace afterward:
+6. Switch back to the default workspace afterward:
      terraform workspace select default
 
 TESTING INSTRUCTIONS
